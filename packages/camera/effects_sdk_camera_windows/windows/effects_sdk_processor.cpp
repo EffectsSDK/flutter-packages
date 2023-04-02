@@ -1,0 +1,204 @@
+#include "effects_sdk_processor.h"
+
+#include <cassert>
+
+#include <algorithm>
+
+#define DEFAULT_VB_NAME "tsvb.dll"
+
+namespace camera_windows {
+
+EffectsSDKProcessor::EffectsSDKProcessor() {
+  LibraryInit(DEFAULT_VB_NAME);
+}
+
+EffectsSDKProcessor::~EffectsSDKProcessor() {
+  create_SDK_Factory_ = nullptr;
+  if (nullptr != dll_handle_) {
+    FreeLibrary(dll_handle_);
+    dll_handle_ = nullptr;
+  }
+}
+
+void EffectsSDKProcessor::LibraryInit(const std::string& library_url) {
+  if (library_url != DEFAULT_VB_NAME) {
+    std::string directory = "";
+    size_t last_slash_idx = library_url.rfind('\\');
+    if (std::string::npos != last_slash_idx)
+      directory = library_url.substr(0, last_slash_idx);
+    else
+      last_slash_idx = library_url.rfind('/');
+
+    if (std::string::npos != last_slash_idx)
+      directory = library_url.substr(0, last_slash_idx);
+    else
+      return;
+
+    if (directory != "") { 
+      std::wstring w_directory = std::wstring(directory.begin(), directory.end());
+      PCWSTR w_c_directory = w_directory.c_str();
+      ::AddDllDirectory(w_c_directory);
+
+      ::SetDefaultDllDirectories(LOAD_LIBRARY_SEARCH_USER_DIRS);
+    }
+  }
+
+  std::wstring w_url = std::wstring(library_url.begin(), library_url.end());
+  LPCWSTR w_c_url = w_url.c_str();
+
+  dll_handle_ = ::LoadLibrary(w_c_url);
+  if (nullptr == dll_handle_) {
+    return;
+  }
+
+  create_SDK_Factory_ = reinterpret_cast<::tsvb::pfnCreateSDKFactory>(
+    GetProcAddress(dll_handle_, "createSDKFactory")
+  );
+
+  auto sdk_factory = create_SDK_Factory_();
+
+  frame_factory_.reset(sdk_factory->createFrameFactory());
+  pipeline_.reset(sdk_factory->createPipeline());
+  
+  sdk_factory->release();
+}
+
+void EffectsSDKProcessor::SetBlur(float blurPower) {
+  if (pipeline_ && !blurOn_) {
+    blur_power_ = blurPower;
+    pipeline_->enableBlurBackground(blur_power_);
+    blurOn_ = true;
+  }
+}
+
+void EffectsSDKProcessor::ClearBlur() {
+  if (pipeline_ && blurOn_) {
+    blurOn_ = false;
+    pipeline_->disableBackgroundBlur();
+    blur_power_ = -1.f;
+  }  
+}
+
+// void EffectsSDKProcessor::SetSegmentationPreset(std::string& preset) {
+// }
+
+void EffectsSDKProcessor::SetBeautificationLevel(float level) {
+  if (pipeline_ && !beautificationOn_) {
+    beautification_level_ = level;
+    pipeline_->setBeautificationLevel(beautification_level_);
+    pipeline_->enableBeautification();
+    beautificationOn_ = true;
+  }
+}
+
+void EffectsSDKProcessor::ClearBeautification() {
+  if (pipeline_ && beautificationOn_) {
+    beautification_level_ = -1.f;
+    pipeline_->disableBeautification();
+    beautificationOn_ = false;
+  }
+}
+
+void EffectsSDKProcessor::SetBackgroundImage(const std::string& url) {
+  if (pipeline_ && !backgroundOn_) {
+    ::tsvb::IReplacementController* controller = nullptr;
+    auto error = pipeline_->enableReplaceBackground(&controller);
+
+    // TODO: Refacore error
+    if (error != ::tsvb::PipelineErrorCode::ok)
+      throw std::runtime_error("Can't enable replace background");
+
+    replacement_controller_.reset(controller);
+
+    background_image_.reset(frame_factory_->loadImage(url.c_str()));
+
+    replacement_controller_->setBackgroundImage(background_image_.get());
+
+    backgroundOn_ = true;
+  }
+}
+
+void EffectsSDKProcessor::SetBackgroundColor(int color) {
+  if (pipeline_ && !backgroundOn_) {
+    ::tsvb::IReplacementController* controller = nullptr;
+    auto error = pipeline_->enableReplaceBackground(&controller);
+
+    // TODO: Refacore error
+    if (error != ::tsvb::PipelineErrorCode::ok)
+      throw std::runtime_error("Can't enable replace background");
+
+    replacement_controller_.reset(controller);
+
+    const int size = width_ * height_ * 4;
+    std::vector<int8_t> bgra_data(size, 0);
+    bgra_data.insert(bgra_data.begin(), size, 0);
+
+    const int8_t b = (color >> 24) & 0xFF;
+    const int8_t g = (color >> 16) & 0xFF;
+    const int8_t r = (color >> 8) & 0xFF;
+    const int8_t a = (color >> 0) & 0xFF;
+    
+    for (int i = 0; i < size; i += 4) {
+      bgra_data[i] = b;
+      bgra_data[i + 1] = g;
+      bgra_data[i + 2] = r;
+      bgra_data[i + 3] = a;
+    }
+
+    auto background = frame_factory_->createBGRA(bgra_data.data(), width_ * 4, width_, height_, true);
+    replacement_controller_->setBackgroundImage(background);
+    background->release();
+
+    backgroundOn_ = true;
+  }
+}
+
+void EffectsSDKProcessor::ClearBackground() {
+  if (replacement_controller_ && backgroundOn_) {
+    backgroundOn_ = false;
+    replacement_controller_->clearBackgroundImage();
+  }
+}
+
+uint8_t* EffectsSDKProcessor::Process(uint8_t* camera_frame) {
+  if (!blurOn_ && !beautificationOn_ && !backgroundOn_)
+    return camera_frame;
+
+  initial_frame_ = frame_factory_->createBGRA(camera_frame, width_ * 4, width_, height_, true);
+  initial_frame_new_ = initial_frame_->lock(::tsvb::FrameLock::readWrite);
+  stride_ = initial_frame_new_->bytesPerLine(0);
+
+  tsvb::PipelineError error = -1;
+  processed_frame_ = pipeline_->process(initial_frame_, &error);
+
+  // TODO: Refacore error
+  if (error != ::tsvb::PipelineErrorCode::ok)
+    throw std::runtime_error("Can't process frame");
+
+  processed_frame_data_ = processed_frame_->lock(::tsvb::FrameLock::readWrite);
+
+  auto rgba_data = reinterpret_cast<uint8_t*>(processed_frame_data_->dataPointer(0));
+  for (uint32_t i = 0; i < processed_frame_data_->bytesPerLine(0) * height_; i += 4) {
+    uint8_t tmp_r = rgba_data[i];
+    rgba_data[i] = rgba_data[i + 2];
+    rgba_data[i + 2] = tmp_r;
+  }
+
+  memcpy(frame_data_.data(), rgba_data, stride_ * height_);
+
+  initial_frame_new_->release();
+  initial_frame_->release();
+
+  processed_frame_data_->release();
+  processed_frame_->release();
+  
+  return frame_data_.data();
+}
+
+void EffectsSDKProcessor::UpdateResolution(uint32_t width, uint32_t height) {
+  width_ = width;
+  height_ = height;
+  frame_data_.resize(width_ * height_ * 4);
+}
+
+}
