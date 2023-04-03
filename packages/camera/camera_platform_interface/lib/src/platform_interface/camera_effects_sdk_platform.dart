@@ -276,34 +276,44 @@ abstract class CameraEffectsSDKPlatform extends PlatformInterface {
     throw UnimplementedError('dispose() is not implemented.');
   }
 
+  /// Enable background blur with [blurPower] from 0 to 1.
   Future<void> setBlur(int cameraId, double blurPower) {
     throw UnimplementedError('setBlur() is not implemented.');
   }
 
+  /// Disable background blur.
   Future<void> clearBlur(int cameraId) {
     throw UnimplementedError('clearBlur() is not implemented.');
   }
 
+  /// Enable beautification. [level] could be from 0 to 1. Higher number -> more visible effect ofbeautification.
   Future<void> setBeautificationLevel(int cameraId, double level) {
     throw UnimplementedError('setBeautificationLevel() is not implemented.');
   }
 
+  /// Disable beautification.
   Future<void> clearBeautification(int cameraId) {
     throw UnimplementedError('clearBeautification() is not implemented.');
   }
 
+  /// Set image for background.
   Future<void> setBackgroundImage(int cameraId, String url) {
     throw UnimplementedError('setBackgroundImage() is not implemented.');
   }
 
+  /// Set BGRA [color] for background.
   Future<void> setBackgroundColor(int cameraId, int color) {
     throw UnimplementedError('setBackgroundColor() is not implemented.');
   }
 
+  /// Disable background.
   Future<void> clearBackground(int cameraId) {
     throw UnimplementedError('clearBackground() is not implemented.');
   }
 
+  /// Init native Video Background shared library. Must be called after initializeCamera() method.
+  /// path - must be absolute path to shared library.
+  /// By default Effects SDK try to init tsvb.dll for Windows, ... for MacOS in current directory.
   Future<void> initEffectsSDK(int cameraId, String path) {
     throw UnimplementedError('initEffectsSDK() is not implemented.');
   }
