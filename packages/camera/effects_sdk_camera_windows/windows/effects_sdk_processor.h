@@ -18,10 +18,7 @@ namespace camera_windows {
 class Releaser
 {
 public:
-	void operator()(::tsvb::IRelease* object)
-	{
-		object->release();
-	}
+  void operator() (::tsvb::IRelease* object);
 };
 
 class EffectsSDKProcessor {
@@ -62,13 +59,15 @@ class EffectsSDKProcessor {
   std::unique_ptr<::tsvb::IReplacementController, Releaser> replacement_controller_;
   std::unique_ptr<::tsvb::IPipeline, Releaser> pipeline_;
 
+  ::tsvb::PipelineError pipeline_error_ = ::tsvb::PipelineErrorCode::ok; 
+
   std::unique_ptr<::tsvb::IFrame, Releaser> background_image_;
 
-  ::tsvb::IFrame* initial_frame_;
-  ::tsvb::ILockedFrameData* initial_frame_new_;
+  std::unique_ptr<::tsvb::IFrame, Releaser> initial_frame_;
+  std::unique_ptr<::tsvb::ILockedFrameData, Releaser> initial_frame_data_;
 
-  ::tsvb::IFrame* processed_frame_;
-  ::tsvb::ILockedFrameData* processed_frame_data_;
+  std::unique_ptr<::tsvb::IFrame, Releaser> processed_frame_;
+  std::unique_ptr<::tsvb::ILockedFrameData, Releaser> processed_frame_data_;
 
   ::tsvb::pfnCreateSDKFactory create_SDK_Factory_ = nullptr;
   HMODULE dll_handle_ = nullptr;

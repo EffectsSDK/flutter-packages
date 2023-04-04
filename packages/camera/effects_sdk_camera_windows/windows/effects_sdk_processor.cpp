@@ -8,6 +8,10 @@
 
 namespace camera_windows {
 
+void Releaser::operator() (::tsvb::IRelease* object) {
+  object->release();
+}
+
 EffectsSDKProcessor::EffectsSDKProcessor() {
   LibraryInit(DEFAULT_VB_NAME);
 }
@@ -164,33 +168,31 @@ uint8_t* EffectsSDKProcessor::Process(uint8_t* camera_frame) {
   if (!blurOn_ && !beautificationOn_ && !backgroundOn_)
     return camera_frame;
 
-  initial_frame_ = frame_factory_->createBGRA(camera_frame, width_ * 4, width_, height_, true);
-  initial_frame_new_ = initial_frame_->lock(::tsvb::FrameLock::readWrite);
-  stride_ = initial_frame_new_->bytesPerLine(0);
+  initial_frame_.reset(frame_factory_->createBGRA(camera_frame, width_ * 4, width_, height_, false));
 
-  tsvb::PipelineError error = -1;
-  processed_frame_ = pipeline_->process(initial_frame_, &error);
+  processed_frame_.reset(pipeline_->process(initial_frame_.get(), &pipeline_error_));
+
+  initial_frame_data_.reset(initial_frame_->lock(::tsvb::FrameLock::readWrite));
 
   // TODO: Refacore error
-  if (error != ::tsvb::PipelineErrorCode::ok)
+  if (pipeline_error_ != ::tsvb::PipelineErrorCode::ok)
     throw std::runtime_error("Can't process frame");
 
-  processed_frame_data_ = processed_frame_->lock(::tsvb::FrameLock::readWrite);
+  processed_frame_data_.reset(processed_frame_->lock(::tsvb::FrameLock::readWrite));
+  stride_ = initial_frame_data_->bytesPerLine(0);
 
   auto rgba_data = reinterpret_cast<uint8_t*>(processed_frame_data_->dataPointer(0));
-  for (uint32_t i = 0; i < processed_frame_data_->bytesPerLine(0) * height_; i += 4) {
-    uint8_t tmp_r = rgba_data[i];
-    rgba_data[i] = rgba_data[i + 2];
-    rgba_data[i + 2] = tmp_r;
+  uint8_t tmp_r = 0;
+  for (uint32_t i = 0; i < height_; i++) {
+    for (uint32_t j = 0; j < width_ * 4; j += 4) { 
+      tmp_r = rgba_data[j];
+      rgba_data[j] = rgba_data[j + 2];
+      rgba_data[j + 2] = tmp_r;
+    }
+    rgba_data += stride_;
   }
 
-  memcpy(frame_data_.data(), rgba_data, stride_ * height_);
-
-  initial_frame_new_->release();
-  initial_frame_->release();
-
-  processed_frame_data_->release();
-  processed_frame_->release();
+  memcpy(frame_data_.data(), rgba_data - stride_ * height_, stride_ * height_);
   
   return frame_data_.data();
 }
