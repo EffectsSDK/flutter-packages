@@ -17,6 +17,30 @@ EffectsSDKProcessor::EffectsSDKProcessor() {
 }
 
 EffectsSDKProcessor::~EffectsSDKProcessor() {
+  if (frame_factory_)
+    frame_factory_.reset();
+
+  if (replacement_controller_)
+    replacement_controller_.reset();
+
+  if (pipeline_)
+    pipeline_.reset();
+
+  if (background_image_)
+    background_image_.reset();
+
+  if (initial_frame_)
+    initial_frame_.reset();
+
+  if (initial_frame_data_)
+    initial_frame_data_.reset();
+
+  if (processed_frame_)
+    processed_frame_.reset();
+
+  if (processed_frame_data_)
+    processed_frame_data_.reset();
+
   create_SDK_Factory_ = nullptr;
   if (nullptr != dll_handle_) {
     FreeLibrary(dll_handle_);
@@ -25,7 +49,6 @@ EffectsSDKProcessor::~EffectsSDKProcessor() {
 }
 
 void EffectsSDKProcessor::LibraryInit(const std::string& library_url) {
-  if (library_url != DEFAULT_VB_NAME) {
     std::string directory = "";
     size_t last_slash_idx = library_url.rfind('\\');
     if (std::string::npos != last_slash_idx)
@@ -35,17 +58,17 @@ void EffectsSDKProcessor::LibraryInit(const std::string& library_url) {
 
     if (std::string::npos != last_slash_idx)
       directory = library_url.substr(0, last_slash_idx);
-    else
-      return;
 
     if (directory != "") { 
       std::wstring w_directory = std::wstring(directory.begin(), directory.end());
       PCWSTR w_c_directory = w_directory.c_str();
       ::AddDllDirectory(w_c_directory);
 
-      ::SetDefaultDllDirectories(LOAD_LIBRARY_SEARCH_USER_DIRS);
+      ::SetDefaultDllDirectories(LOAD_LIBRARY_SEARCH_USER_DIRS       |
+                                 LOAD_LIBRARY_SEARCH_APPLICATION_DIR |
+                                 LOAD_LIBRARY_SEARCH_DEFAULT_DIRS    | 
+                                 LOAD_LIBRARY_SEARCH_SYSTEM32        );
     }
-  }
 
   std::wstring w_url = std::wstring(library_url.begin(), library_url.end());
   LPCWSTR w_c_url = w_url.c_str();
@@ -165,8 +188,8 @@ void EffectsSDKProcessor::ClearBackground() {
 }
 
 uint8_t* EffectsSDKProcessor::Process(uint8_t* camera_frame) {
-  if (!blurOn_ && !beautificationOn_ && !backgroundOn_)
-    return camera_frame;
+  // if (!blurOn_ && !beautificationOn_ && !backgroundOn_)
+  //   return camera_frame;
 
   initial_frame_.reset(frame_factory_->createBGRA(camera_frame, width_ * 4, width_, height_, false));
 

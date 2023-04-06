@@ -293,6 +293,26 @@ void CameraImpl::OnCameraClosing() {
     auto channel = GetMethodChannel();
     channel->InvokeMethod(kCameraClosingEvent,
                           std::move(std::make_unique<EncodableValue>()));
+    
+    const PendingResultType EffectsSDKTypes[] = 
+      {
+        PendingResultType::kClearBlur,
+        PendingResultType::kSetBlur,
+        PendingResultType::kClearBeautification,
+        PendingResultType::kSetBeautification,
+        PendingResultType::kClearBackground,
+        PendingResultType::kSetBackgroundImage,
+        PendingResultType::kSetBackgroundColor,
+        PendingResultType::kInitEffectsSDK
+      };
+
+    for (int i = 0; i < sizeof(EffectsSDKTypes); i++) {
+      auto pending_result =
+      GetPendingResultByType(EffectsSDKTypes[i]);
+      if (pending_result) {
+        pending_result->Success();
+      }
+    }
   }
 }
 

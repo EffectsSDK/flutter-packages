@@ -776,7 +776,7 @@ void CaptureControllerImpl::OnCaptureEngineInitialized(
     }
 
     // Create texture handler and register new texture.
-    texture_handler_ = std::make_unique<TextureHandler>(texture_registrar_);
+    texture_handler_ = std::make_unique<TextureHandler>(texture_registrar_, &sdk_processor_);
 
     int64_t texture_id = texture_handler_->RegisterTexture();
     if (texture_id >= 0) {

@@ -8,6 +8,9 @@
 
 namespace camera_windows {
 
+TextureHandler::TextureHandler(flutter::TextureRegistrar* texture_registrar, EffectsSDKProcessor* sdk_processor_ptr)
+    : texture_registrar_(texture_registrar), sdk_processor_ptr_(sdk_processor_ptr) {}
+
 TextureHandler::~TextureHandler() {
   // Texture might still be processed while destructor is called.
   // Lock mutex for safe destruction
@@ -93,7 +96,7 @@ const FlutterDesktopPixelBuffer* TextureHandler::ConvertPixelBufferForFlutter(
     FlutterDesktopPixel* dst =
         reinterpret_cast<FlutterDesktopPixel*>(dest_buffer_.data());
 
-    if (sdk_processor_.AnyEffectActive()) {
+    if (sdk_processor_ptr_->AnyEffectActive()) {
        for (uint32_t i = 0; i < pixels_total; i++)
           std::swap(src[i].b, src[i].r);
     }
@@ -134,7 +137,11 @@ const FlutterDesktopPixelBuffer* TextureHandler::ConvertPixelBufferForFlutter(
           };
     }
 
-    flutter_desktop_pixel_buffer_->buffer = sdk_processor_.Process(dest_buffer_.data());
+
+    flutter_desktop_pixel_buffer_->buffer = sdk_processor_ptr_->AnyEffectActive() 
+                                          ? sdk_processor_ptr_->Process(dest_buffer_.data())
+                                          : dest_buffer_.data();
+
     flutter_desktop_pixel_buffer_->width = preview_frame_width_;
     flutter_desktop_pixel_buffer_->height = preview_frame_height_;
 

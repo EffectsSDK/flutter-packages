@@ -35,8 +35,7 @@ struct MFVideoFormatRGB32Pixel {
 // conversion of texture formats.
 class TextureHandler {
  public:
-  TextureHandler(flutter::TextureRegistrar* texture_registrar)
-      : texture_registrar_(texture_registrar) {}
+  TextureHandler(flutter::TextureRegistrar* texture_registrar, EffectsSDKProcessor* sdk_processor_ptr);
   virtual ~TextureHandler();
 
   // Prevent copying.
@@ -53,24 +52,24 @@ class TextureHandler {
   void UpdateTextureSize(uint32_t width, uint32_t height) {
     preview_frame_width_ = width;
     preview_frame_height_ = height;
-    sdk_processor_.UpdateResolution(width, height);
+    sdk_processor_ptr_->UpdateResolution(width, height);
   }
 
   // Sets software mirror state.
   void SetMirrorPreviewState(bool mirror) { mirror_preview_ = mirror; }
 
-  void SetBlur(float blurPower) { sdk_processor_.SetBlur(blurPower); }
-  void ClearBlur() { sdk_processor_.ClearBlur(); }
+  void SetBlur(float blurPower) { sdk_processor_ptr_->SetBlur(blurPower); }
+  void ClearBlur() { sdk_processor_ptr_->ClearBlur(); }
   // void SetSegmentationPreset(std::string& preset) {sdk_processor_.SetSegmentationPreset(preset);}
-  void SetBeautificationLevel(float level) { sdk_processor_.SetBeautificationLevel(level); }
-  void ClearBeautification() { sdk_processor_.ClearBeautification(); }
-  void SetBackgroundImage(const std::string& url) { sdk_processor_.SetBackgroundImage(url); }
-  void SetBackgroundColor(int color) { sdk_processor_.SetBackgroundColor(color); }
-  void ClearBackground() { sdk_processor_.ClearBackground(); }
-  void InitEffectsSDK(const std::string& path) { sdk_processor_.LibraryInit(path); }
+  void SetBeautificationLevel(float level) { sdk_processor_ptr_->SetBeautificationLevel(level); }
+  void ClearBeautification() { sdk_processor_ptr_->ClearBeautification(); }
+  void SetBackgroundImage(const std::string& url) { sdk_processor_ptr_->SetBackgroundImage(url); }
+  void SetBackgroundColor(int color) { sdk_processor_ptr_->SetBackgroundColor(color); }
+  void ClearBackground() { sdk_processor_ptr_->ClearBackground(); }
+  void InitEffectsSDK(const std::string& path) { sdk_processor_ptr_->LibraryInit(path); }
 
  private:
-  EffectsSDKProcessor sdk_processor_;
+  EffectsSDKProcessor* sdk_processor_ptr_;
   
   // Informs flutter texture registrar of updated texture.
   void OnBufferUpdated();

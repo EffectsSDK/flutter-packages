@@ -277,6 +277,8 @@ class CaptureControllerImpl : public CaptureController,
   ComPtr<IMFMediaSource> video_source_;
   ComPtr<IMFMediaSource> audio_source_;
 
+  EffectsSDKProcessor sdk_processor_;
+
   TextureRegistrar* texture_registrar_ = nullptr;
 };
 
