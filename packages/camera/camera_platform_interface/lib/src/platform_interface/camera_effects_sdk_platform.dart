@@ -317,4 +317,8 @@ abstract class CameraEffectsSDKPlatform extends PlatformInterface {
   Future<void> initEffectsSDK(int cameraId, String path) {
     throw UnimplementedError('initEffectsSDK() is not implemented.');
   }
+
+  Future<void> setOutputStorage(int cameraId, Uint8List outputStorage) {
+    throw UnimplementedError('setOOutputStorage() is not implemented.');
+  }
 }
