@@ -4,6 +4,7 @@
 
 import 'dart:async';
 import 'dart:math';
+import 'dart:ffi' as ffi;
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
@@ -692,5 +693,14 @@ class MethodChannelEffectsSDKCamera extends CameraEffectsSDKPlatform {
         'outputStorage': outputStorage,
       },
     );
+  }
+
+  Future<ffi.Pointer<ffi.Int8>> getBGRADataPtr(int cameraId) async {
+    final int? intPtrToData = await _channel.invokeMethod<int>(
+      'getBGRAData',
+      <String, dynamic>{'cameraId': cameraId},
+    );
+
+    return intPtrToData! as ffi.Pointer<ffi.Int8>;
   }
 }

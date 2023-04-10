@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:math';
+import 'dart:ffi' as ffi;
 
 import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart';
@@ -319,6 +320,10 @@ abstract class CameraEffectsSDKPlatform extends PlatformInterface {
   }
 
   Future<void> setOutputStorage(int cameraId, Uint8List outputStorage) {
-    throw UnimplementedError('setOOutputStorage() is not implemented.');
+    throw UnimplementedError('setOutputStorage() is not implemented.');
+  }
+
+  Future<ffi.Pointer<ffi.Int8>> getBGRADataPtr(int cameraId) async {
+    throw UnimplementedError('getBGRADataPtr() is not implemented.');
   }
 }
