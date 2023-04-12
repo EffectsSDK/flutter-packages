@@ -3,8 +3,9 @@
 // found in the LICENSE file.
 
 import 'dart:async';
-import 'dart:math';
 import 'dart:ffi' as ffi;
+import 'dart:math';
+import 'dart:typed_data';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
@@ -685,22 +686,12 @@ class MethodChannelEffectsSDKCamera extends CameraEffectsSDKPlatform {
   }
 
   @override
-  Future<void> setOutputStorage(int cameraId, Uint8List outputStorage) async {
-    await _channel.invokeMethod<double>(
-      'setOOutputStorage',
-      <String, dynamic>{
-        'cameraId': cameraId,
-        'outputStorage': outputStorage,
-      },
-    );
-  }
-
-  Future<ffi.Pointer<ffi.Int8>> getBGRADataPtr(int cameraId) async {
-    final int? intPtrToData = await _channel.invokeMethod<int>(
-      'getBGRAData',
+  Future<Int8List> getFrameDataBuffer(int cameraId) async {
+    final Map<String, dynamic>? result = await _channel.invokeMapMethod<String, dynamic>(
+      'getFrameDataBuffer',
       <String, dynamic>{'cameraId': cameraId},
     );
 
-    return intPtrToData! as ffi.Pointer<ffi.Int8>;
+    return ffi.Pointer<ffi.Int8>.fromAddress(result!['dataPtr'] as int).asTypedList(result['size'] as int);
   }
 }

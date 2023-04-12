@@ -3,7 +3,9 @@
 // found in the LICENSE file.
 
 import 'dart:async';
+import 'dart:ffi' as ffi;
 import 'dart:math';
+import 'dart:typed_data';
 
 import 'package:camera_platform_interface/camera_effects_sdk_platform_interface.dart';
 import 'package:flutter/services.dart';
@@ -353,13 +355,20 @@ class EffectsSDKCameraWindows extends CameraEffectsSDKPlatform {
   /// Returns the resolution preset as a nullable String.
   String? _serializeResolutionPreset(ResolutionPreset? resolutionPreset) {
     switch (resolutionPreset) {
-      case null: return null;
-      case ResolutionPreset.max: return 'max';
-      case ResolutionPreset.ultraHigh: return 'ultraHigh';
-      case ResolutionPreset.veryHigh: return 'veryHigh';
-      case ResolutionPreset.high: return 'high';
-      case ResolutionPreset.medium: return 'medium';
-      case ResolutionPreset.low: return 'low';
+      case null:
+        return null;
+      case ResolutionPreset.max:
+        return 'max';
+      case ResolutionPreset.ultraHigh:
+        return 'ultraHigh';
+      case ResolutionPreset.veryHigh:
+        return 'veryHigh';
+      case ResolutionPreset.high:
+        return 'high';
+      case ResolutionPreset.medium:
+        return 'medium';
+      case ResolutionPreset.low:
+        return 'low';
     }
   }
 
@@ -407,9 +416,12 @@ class EffectsSDKCameraWindows extends CameraEffectsSDKPlatform {
   @visibleForTesting
   CameraLensDirection parseCameraLensDirection(String string) {
     switch (string) {
-      case 'front': return CameraLensDirection.front;
-      case 'back': return CameraLensDirection.back;
-      case 'external': return CameraLensDirection.external;
+      case 'front':
+        return CameraLensDirection.front;
+      case 'back':
+        return CameraLensDirection.back;
+      case 'external':
+        return CameraLensDirection.external;
     }
     throw ArgumentError('Unknown CameraLensDirection value');
   }
@@ -497,5 +509,15 @@ class EffectsSDKCameraWindows extends CameraEffectsSDKPlatform {
         'effectsSDKPath': path,
       },
     );
+  }
+
+  @override
+  Future<Int8List> getFrameDataBuffer(int cameraId) async {
+    final Map<String, dynamic>? result = await pluginChannel.invokeMapMethod<String, dynamic>(
+      'getFrameDataBuffer',
+      <String, dynamic>{'cameraId': cameraId},
+    );
+
+    return ffi.Pointer<ffi.Int8>.fromAddress(result!['dataPtr'] as int).asTypedList(result['size'] as int);
   }
 }
