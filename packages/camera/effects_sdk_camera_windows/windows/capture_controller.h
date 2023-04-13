@@ -125,6 +125,7 @@ class CaptureController {
   virtual void SetBackgroundColor(int color) = 0;
   virtual void ClearBackground() = 0;
   virtual void InitEffectsSDK(const std::string& url) = 0;
+  virtual void GetFrameDataBuffer() = 0;
 };
 
 // Concrete implementation of the |CaptureController| interface.
@@ -178,6 +179,7 @@ class CaptureControllerImpl : public CaptureController,
   void SetBackgroundColor(int color) override;
   void ClearBackground() override;
   void InitEffectsSDK(const std::string& url) override;
+  void GetFrameDataBuffer() override;
 
   // Sets capture engine, for testing purposes.
   void SetCaptureEngine(IMFCaptureEngine* capture_engine) {

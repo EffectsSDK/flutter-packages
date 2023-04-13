@@ -319,6 +319,7 @@ abstract class CameraEffectsSDKPlatform extends PlatformInterface {
     throw UnimplementedError('initEffectsSDK() is not implemented.');
   }
 
+  /// Returns a [Int8List] that is updated on every new frame processed in camera preview
   Future<Int8List> getFrameDataBuffer(int cameraId) async {
     throw UnimplementedError('getFrameDataBuffer() is not implemented.');
   }

@@ -37,6 +37,10 @@ class EffectsSDKProcessor {
   void SetBackgroundColor(int color);
   void ClearBackground();
 
+  uint32_t Width() { return width_; }
+  uint32_t Height() { return height_; }
+  uint32_t Stride() { return stride_; }
+
   uint8_t* Process(uint8_t* camera_frame);
 
   void UpdateResolution(uint32_t width, uint32_t height);

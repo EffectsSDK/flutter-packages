@@ -145,6 +145,8 @@ class CaptureControllerListener {
   virtual void OnClearBackground() = 0;
 
   virtual void OnInitEffectsSDK() = 0;
+
+  virtual void OnGetFrameDataBuffer(unsigned char* data) = 0;
 };
 
 }  // namespace camera_windows

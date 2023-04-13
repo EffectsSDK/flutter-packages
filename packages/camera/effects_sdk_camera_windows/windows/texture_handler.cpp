@@ -142,6 +142,16 @@ const FlutterDesktopPixelBuffer* TextureHandler::ConvertPixelBufferForFlutter(
                                           ? sdk_processor_ptr_->Process(dest_buffer_.data())
                                           : dest_buffer_.data();
 
+    auto src_buffer_start = flutter_desktop_pixel_buffer_->buffer;
+    for (uint32_t i = 0; i < sdk_processor_ptr_->Height(); i++) {
+        memcpy(BGRA_buffer_.data() + sdk_processor_ptr_->Stride() * i, 
+               flutter_desktop_pixel_buffer_->buffer, sdk_processor_ptr_->Width() * 4);
+
+      flutter_desktop_pixel_buffer_->buffer += sdk_processor_ptr_->Stride();
+    }
+
+    flutter_desktop_pixel_buffer_->buffer = src_buffer_start;
+
     flutter_desktop_pixel_buffer_->width = preview_frame_width_;
     flutter_desktop_pixel_buffer_->height = preview_frame_height_;
 

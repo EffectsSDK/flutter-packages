@@ -385,4 +385,22 @@ void CameraImpl::OnInitEffectsSDK() {
   }
 }
 
+void CameraImpl::OnGetFrameDataBuffer(unsigned char* data) {
+  auto pending_result =
+      GetPendingResultByType(PendingResultType::kGetFrameData);
+  if (pending_result) {
+    EncodableMap ret;
+  
+    auto cc = this->GetCaptureController();
+    assert(cc);
+    const int size = cc->GetPreviewWidth() * cc->GetPreviewHeight() * 4;
+    // auto data = cc->GetFrameDataBuffer();
+
+    ret[EncodableValue("size")] = EncodableValue(size);
+    ret[EncodableValue("dataPtr")] = EncodableValue(reinterpret_cast<int64_t>(data));
+
+    pending_result->Success(ret);
+  }
+}
+
 }  // namespace camera_windows

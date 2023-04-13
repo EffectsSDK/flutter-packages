@@ -51,6 +51,7 @@ constexpr char kSetBackgroundImageMethod[] = "setBackgroundImage";
 constexpr char kSetBackgroundColorMethod[] = "setBackgroundColor";
 constexpr char kClearBackgroundMethod[] = "clearBackground";
 constexpr char kInitEffectsSDKMethod[] = "initEffectsSDK";
+constexpr char kGetFrameDataBuffer[] = "getFrameDataBuffer";
 
 constexpr char kBlurPowerKey[] = "blurPower";
 // constexpr char kSegmentationPresetKey[] = "segmentationPreset";
@@ -353,12 +354,18 @@ void CameraPlugin::HandleMethodCall(
     assert(arguments);
 
     return ClearBackgroundMethodHandler(*arguments, std::move(result));
-   } else if (method_name.compare(kInitEffectsSDKMethod) == 0) {
+  } else if (method_name.compare(kInitEffectsSDKMethod) == 0) {
     const auto* arguments =
         std::get_if<flutter::EncodableMap>(method_call.arguments());
     assert(arguments);
 
     return InitEffectsSDKMethodHandler(*arguments, std::move(result));
+  } else if (method_name.compare(kGetFrameDataBuffer) == 0) {
+    auto arguments =
+        std::get_if<flutter::EncodableMap>(method_call.arguments());
+    assert(arguments);
+
+    return GetFrameDataBufferHandler(*arguments, std::move(result));
   } else {
     result->NotImplemented();
   }
@@ -748,6 +755,32 @@ void CameraPlugin::InitEffectsSDKMethodHandler(const EncodableMap& args,
     auto cc = camera->GetCaptureController();
     assert(cc);
     cc->InitEffectsSDK(*lib_path);
+  }
+}
+
+void CameraPlugin::GetFrameDataBufferHandler(
+    const EncodableMap& args, std::unique_ptr<flutter::MethodResult<>> result) {
+  auto camera_id = GetInt64ValueOrNull(args, kCameraIdKey);
+  if (!camera_id) {
+    return result->Error("argument_error",
+                         std::string(kCameraIdKey) + " missing");
+  }
+
+  auto camera = GetCameraByCameraId(*camera_id);
+  if (!camera) {
+    return result->Error("camera_error", "Camera not created");
+  }
+
+  if (camera->HasPendingResultByType(PendingResultType::kGetFrameData)) {
+    return result->Error("camera_error",
+                         "Pending set image request exists");
+  }
+
+  if (camera->AddPendingResult(PendingResultType::kGetFrameData,
+                               std::move(result))) {
+    auto cc = camera->GetCaptureController();
+    assert(cc);
+    cc->GetFrameDataBuffer();
   }
 }
 

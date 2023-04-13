@@ -53,6 +53,8 @@ class TextureHandler {
     preview_frame_width_ = width;
     preview_frame_height_ = height;
     sdk_processor_ptr_->UpdateResolution(width, height);
+
+    BGRA_buffer_.resize(width * height * 4);
   }
 
   // Sets software mirror state.
@@ -67,9 +69,12 @@ class TextureHandler {
   void SetBackgroundColor(int color) { sdk_processor_ptr_->SetBackgroundColor(color); }
   void ClearBackground() { sdk_processor_ptr_->ClearBackground(); }
   void InitEffectsSDK(const std::string& path) { sdk_processor_ptr_->LibraryInit(path); }
+  uint8_t* GetPointerToBGRAData() { return BGRA_buffer_.data(); }
 
  private:
   EffectsSDKProcessor* sdk_processor_ptr_;
+
+  std::vector<uint8_t> BGRA_buffer_;
   
   // Informs flutter texture registrar of updated texture.
   void OnBufferUpdated();

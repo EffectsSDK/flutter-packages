@@ -145,6 +145,10 @@ class CameraPlugin : public flutter::Plugin,
 
   void InitEffectsSDKMethodHandler(const EncodableMap& args,
                                    std::unique_ptr<MethodResult<>> result);
+
+  void GetFrameDataBufferHandler(const EncodableMap& args,
+                                      std::unique_ptr<MethodResult<>> result);
+
   
   std::unique_ptr<CameraFactory> camera_factory_;
   flutter::TextureRegistrar* texture_registrar_;

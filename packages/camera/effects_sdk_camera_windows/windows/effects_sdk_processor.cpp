@@ -188,9 +188,6 @@ void EffectsSDKProcessor::ClearBackground() {
 }
 
 uint8_t* EffectsSDKProcessor::Process(uint8_t* camera_frame) {
-  // if (!blurOn_ && !beautificationOn_ && !backgroundOn_)
-  //   return camera_frame;
-
   initial_frame_.reset(frame_factory_->createBGRA(camera_frame, width_ * 4, width_, height_, false));
 
   processed_frame_.reset(pipeline_->process(initial_frame_.get(), &pipeline_error_));

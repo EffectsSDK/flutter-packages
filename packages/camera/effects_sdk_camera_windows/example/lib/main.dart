@@ -3,6 +3,8 @@
 // found in the LICENSE file.
 
 import 'dart:async';
+import 'dart:io';
+import 'dart:typed_data';
 
 import 'package:camera_platform_interface/camera_effects_sdk_platform_interface.dart';
 import 'package:flutter/material.dart';
@@ -147,6 +149,8 @@ class _MyAppState extends State<MyApp> {
         });
       }
     }
+
+    _frameBuffer = await CameraEffectsSDKPlatform.instance.getFrameDataBuffer(_cameraId);
   }
 
   Future<void> _disposeCurrentCamera() async {
@@ -248,12 +252,23 @@ class _MyAppState extends State<MyApp> {
     }
   }
 
-  Future<void> _blur() async {
-    await CameraEffectsSDKPlatform.instance.setBlur(_cameraId, 0.05);
+  bool blurOn = false;
+  Future<void> _toggleBlur() async {
+    if (!blurOn) {
+      blurOn = true;
+      await CameraEffectsSDKPlatform.instance.setBlur(_cameraId, 0.05);
+    } else {
+      blurOn = false;
+      await CameraEffectsSDKPlatform.instance.clearBlur(_cameraId);
+    }
   }
 
-  Future<void> _blurOff() async {
-    await CameraEffectsSDKPlatform.instance.clearBlur(_cameraId);
+  late Int8List _frameBuffer;
+  Future<void> _saveFrames() async {
+    for (int i = 0; i < 3; i++) {
+      await Future.delayed(const Duration(seconds: 1));
+      File('my_image_$i').writeAsBytes(_frameBuffer);
+    }
   }
 
   Future<void> _switchCamera() async {
@@ -398,16 +413,16 @@ class _MyAppState extends State<MyApp> {
                   ),
                   const SizedBox(width: 5),
                   ElevatedButton(
-                    onPressed: _blur,
+                    onPressed: _toggleBlur,
                     child: const Text(
-                      'Blur',
+                      'Toggle blur',
                     ),
                   ),
                   const SizedBox(width: 5),
                   ElevatedButton(
-                    onPressed: _blurOff,
+                    onPressed: _saveFrames,
                     child: const Text(
-                      'Disable Blur',
+                      'Save 3 frames',
                     ),
                   ),
                   if (_cameras.length > 1) ...<Widget>[
