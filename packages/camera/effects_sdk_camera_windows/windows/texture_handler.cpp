@@ -137,17 +137,20 @@ const FlutterDesktopPixelBuffer* TextureHandler::ConvertPixelBufferForFlutter(
           };
     }
 
-
+    // TODO: High system load. Looks like bottle neck, need to refactore all processing code
+    // and also optimize copy to BGRA_buffer_.
     flutter_desktop_pixel_buffer_->buffer = sdk_processor_ptr_->AnyEffectActive() 
                                           ? sdk_processor_ptr_->Process(dest_buffer_.data())
                                           : dest_buffer_.data();
 
     auto src_buffer_start = flutter_desktop_pixel_buffer_->buffer;
-    for (uint32_t i = 0; i < sdk_processor_ptr_->Height(); i++) {
-        memcpy(BGRA_buffer_.data() + sdk_processor_ptr_->Stride() * i, 
-               flutter_desktop_pixel_buffer_->buffer, sdk_processor_ptr_->Width() * 4);
+    int stride = (sdk_processor_ptr_->Stride() == 0) ? preview_frame_width_ * 4 : sdk_processor_ptr_->Stride();
 
-      flutter_desktop_pixel_buffer_->buffer += sdk_processor_ptr_->Stride();
+    for (uint32_t i = 0; i < preview_frame_height_; i++) {
+        memcpy(BGRA_buffer_.data() + stride * i, 
+               flutter_desktop_pixel_buffer_->buffer, preview_frame_width_ * 4);
+
+      flutter_desktop_pixel_buffer_->buffer += stride;
     }
 
     flutter_desktop_pixel_buffer_->buffer = src_buffer_start;
