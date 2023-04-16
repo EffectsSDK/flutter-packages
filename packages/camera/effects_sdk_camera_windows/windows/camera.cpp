@@ -394,10 +394,22 @@ void CameraImpl::OnGetFrameDataBuffer(unsigned char* data) {
     auto cc = this->GetCaptureController();
     assert(cc);
     const int size = cc->GetPreviewWidth() * cc->GetPreviewHeight() * 4;
-    // auto data = cc->GetFrameDataBuffer();
 
     ret[EncodableValue("size")] = EncodableValue(size);
     ret[EncodableValue("dataPtr")] = EncodableValue(reinterpret_cast<int64_t>(data));
+
+    pending_result->Success(ret);
+  }
+}
+
+void CameraImpl::OnGetResolution(int width, int height) {
+  auto pending_result =
+      GetPendingResultByType(PendingResultType::kGetResolution);
+  if (pending_result) {
+    EncodableMap ret;
+
+    ret[EncodableValue("width")] = EncodableValue(width);
+    ret[EncodableValue("height")] = EncodableValue(height);
 
     pending_result->Success(ret);
   }

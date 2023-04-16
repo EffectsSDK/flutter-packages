@@ -149,6 +149,9 @@ class CameraPlugin : public flutter::Plugin,
   void GetFrameDataBufferHandler(const EncodableMap& args,
                                       std::unique_ptr<MethodResult<>> result);
 
+  void GetResolutionMethodHandler(const EncodableMap& args,
+                                      std::unique_ptr<MethodResult<>> result);
+
   
   std::unique_ptr<CameraFactory> camera_factory_;
   flutter::TextureRegistrar* texture_registrar_;

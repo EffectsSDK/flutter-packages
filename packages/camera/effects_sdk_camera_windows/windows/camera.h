@@ -37,6 +37,7 @@ enum class PendingResultType {
   kClearBackground,
   kInitEffectsSDK,
   kGetFrameData,
+  kGetResolution,
 };
 
 // Interface implemented by cameras.
@@ -133,6 +134,7 @@ class CameraImpl : public Camera {
   void OnClearBackground() override;
   void OnInitEffectsSDK() override;
   void OnGetFrameDataBuffer(unsigned char* data) override;
+  void OnGetResolution(int width, int height) override;
 
   // Camera
   bool HasDeviceId(std::string& device_id) const override {

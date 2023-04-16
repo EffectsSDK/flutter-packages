@@ -51,7 +51,8 @@ constexpr char kSetBackgroundImageMethod[] = "setBackgroundImage";
 constexpr char kSetBackgroundColorMethod[] = "setBackgroundColor";
 constexpr char kClearBackgroundMethod[] = "clearBackground";
 constexpr char kInitEffectsSDKMethod[] = "initEffectsSDK";
-constexpr char kGetFrameDataBuffer[] = "getFrameDataBuffer";
+constexpr char kGetFrameDataBufferMethod[] = "getFrameDataBuffer";
+constexpr char kGetResolutionMethod[] = "getResolution";
 
 constexpr char kBlurPowerKey[] = "blurPower";
 // constexpr char kSegmentationPresetKey[] = "segmentationPreset";
@@ -360,12 +361,18 @@ void CameraPlugin::HandleMethodCall(
     assert(arguments);
 
     return InitEffectsSDKMethodHandler(*arguments, std::move(result));
-  } else if (method_name.compare(kGetFrameDataBuffer) == 0) {
+  } else if (method_name.compare(kGetFrameDataBufferMethod) == 0) {
     auto arguments =
         std::get_if<flutter::EncodableMap>(method_call.arguments());
     assert(arguments);
 
     return GetFrameDataBufferHandler(*arguments, std::move(result));
+  } else if (method_name.compare(kGetResolutionMethod) == 0) {
+    auto arguments =
+        std::get_if<flutter::EncodableMap>(method_call.arguments());
+    assert(arguments);
+
+    return GetResolutionMethodHandler(*arguments, std::move(result));
   } else {
     result->NotImplemented();
   }
@@ -740,7 +747,7 @@ void CameraPlugin::InitEffectsSDKMethodHandler(const EncodableMap& args,
 
   if (camera->HasPendingResultByType(PendingResultType::kInitEffectsSDK)) {
     return result->Error("camera_error",
-                         "Pending set image request exists");
+                         "Pending init EffectsSDK request exists");
   }
 
   const auto* lib_path =
@@ -773,7 +780,7 @@ void CameraPlugin::GetFrameDataBufferHandler(
 
   if (camera->HasPendingResultByType(PendingResultType::kGetFrameData)) {
     return result->Error("camera_error",
-                         "Pending set image request exists");
+                         "Pending get frame buffer request exists");
   }
 
   if (camera->AddPendingResult(PendingResultType::kGetFrameData,
@@ -783,6 +790,33 @@ void CameraPlugin::GetFrameDataBufferHandler(
     cc->GetFrameDataBuffer();
   }
 }
+
+void CameraPlugin::GetResolutionMethodHandler(const EncodableMap& args,
+    std::unique_ptr<MethodResult<>> result) {
+  auto camera_id = GetInt64ValueOrNull(args, kCameraIdKey);
+  if (!camera_id) {
+    return result->Error("argument_error",
+                         std::string(kCameraIdKey) + " missing");
+  }
+
+  auto camera = GetCameraByCameraId(*camera_id);
+  if (!camera) {
+    return result->Error("camera_error", "Camera not created");
+  }
+
+  if (camera->HasPendingResultByType(PendingResultType::kGetResolution)) {
+    return result->Error("camera_error",
+                         "Pending get resolution request exists");
+  }
+
+  if (camera->AddPendingResult(PendingResultType::kGetResolution,
+                               std::move(result))) {
+    auto cc = camera->GetCaptureController();
+    assert(cc);
+    cc->GetResolution();
+  }
+}
+                                      
 
 void CameraPlugin::PausePreviewMethodHandler(
     const EncodableMap& args, std::unique_ptr<flutter::MethodResult<>> result) {

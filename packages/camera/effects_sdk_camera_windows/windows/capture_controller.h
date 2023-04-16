@@ -126,6 +126,7 @@ class CaptureController {
   virtual void ClearBackground() = 0;
   virtual void InitEffectsSDK(const std::string& url) = 0;
   virtual void GetFrameDataBuffer() = 0;
+  virtual void GetResolution() = 0;
 };
 
 // Concrete implementation of the |CaptureController| interface.
@@ -180,6 +181,7 @@ class CaptureControllerImpl : public CaptureController,
   void ClearBackground() override;
   void InitEffectsSDK(const std::string& url) override;
   void GetFrameDataBuffer() override;
+  void GetResolution() override;
 
   // Sets capture engine, for testing purposes.
   void SetCaptureEngine(IMFCaptureEngine* capture_engine) {

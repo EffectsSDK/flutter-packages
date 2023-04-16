@@ -6,10 +6,12 @@ import 'dart:async';
 import 'dart:ffi' as ffi;
 import 'dart:math';
 import 'dart:typed_data';
+import 'dart:io';
 
 import 'package:camera_platform_interface/camera_effects_sdk_platform_interface.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart';
+import 'package:image/image.dart' as imglib;
 import 'package:stream_transform/stream_transform.dart';
 
 /// An implementation of [CameraEffectsSDKPlatform] for Windows.
@@ -196,13 +198,32 @@ class EffectsSDKCameraWindows extends CameraEffectsSDKPlatform {
 
   @override
   Future<XFile> takePicture(int cameraId) async {
-    final String? path;
-    path = await pluginChannel.invokeMethod<String>(
-      'takePicture',
+    final Uint8List copyData = (await getFrameDataBuffer(cameraId)).buffer.asUint8List();
+
+    final Map<String, dynamic>? result = await pluginChannel.invokeMapMethod<String, dynamic>(
+      'getResolution',
       <String, dynamic>{'cameraId': cameraId},
     );
 
-    return XFile(path!);
+    final imglib.Image img = imglib.Image(width: result!['width'] as int, height: result['height'] as int);
+
+    int i = 0;
+    for (final imglib.Pixel pixel in img) {
+      pixel.r = copyData[i];
+      pixel.g = copyData[i + 1];
+      pixel.b = copyData[i + 2];
+      i += 4;
+    }
+    final Uint8List png = imglib.encodePng(img, level: 6, singleFrame: false, filter: imglib.PngFilter.paeth);
+
+    String now = DateTime.now().toString();
+    now = now.replaceAll(' ', '_');
+    now = now.replaceAll('.', '_');
+    now = now.replaceAll(':', '_');
+
+    final File file = await File('$now.png').writeAsBytes(png);
+
+    return XFile(file.path);
   }
 
   @override

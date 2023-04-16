@@ -964,13 +964,17 @@ void CaptureControllerImpl::InitEffectsSDK(const std::string& path) {
   capture_controller_listener_->OnInitEffectsSDK();
 }
 
-  void CaptureControllerImpl::GetFrameDataBuffer() {
-    if (!texture_handler_) {
-      return;
-    }
-
-    capture_controller_listener_->OnGetFrameDataBuffer(texture_handler_->GetPointerToBGRAData());
+void CaptureControllerImpl::GetFrameDataBuffer() {
+  if (!texture_handler_) {
+    return;
   }
+
+  capture_controller_listener_->OnGetFrameDataBuffer(texture_handler_->GetPointerToBGRAData());
+}
+
+void CaptureControllerImpl::GetResolution() {
+  capture_controller_listener_->OnGetResolution(preview_frame_width_, preview_frame_height_);
+}
 
 // Handles capture time update from each processed frame.
 // Stops timed recordings if requested recording duration has passed.

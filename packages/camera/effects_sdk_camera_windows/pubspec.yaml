@@ -18,6 +18,7 @@ flutter:
         dartPluginClass: EffectsSDKCameraWindows
 
 dependencies:
+  image: ^4.0.15
   camera_platform_interface:
     git:
       url: https://github.com/EffectsSDK/flutter-packages
