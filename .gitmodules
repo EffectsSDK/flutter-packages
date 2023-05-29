@@ -1,3 +1,6 @@
 [submodule "site-shared"]
 	path = site-shared
 	url = https://github.com/dart-lang/site-shared
+[submodule "packages/camera/flutter-camera-macos"]
+	path = packages/camera/flutter-camera-macos
+	url = https://github.com/EffectsSDK/flutter-camera-macos
